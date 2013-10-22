@@ -1,8 +1,23 @@
 #include <iostream>
 #include "SimpleGraph.h"
 using namespace std;
+
+void runGraphViz(){
+    cout<<"Enter a word:";
+    string word;
+    getline(cin,word);
+    cout<<word<<endl;
+}
+
 int main() {
-    for(int i=0; i<10; i++)
-        cout<<i<<endl;
+    while(true){
+        runGraphViz();
+        string keepGoing;
+        cout<<"Do you want to continue?(y for yes, no otherwise)";
+        getline(cin,keepGoing);
+        if(keepGoing!="y")
+            break;
+    }
+    cout<<"Program Ended."<<endl;
     return 0;
 }
