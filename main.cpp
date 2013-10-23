@@ -2,12 +2,12 @@
 #include <fstream>
 #include <cmath>
 #include <ctime>
+#include <sstream>
 #include "SimpleGraph.h"
 using namespace std;
 
 const double kPi = 3.14159265358979323;
-const double max_time = 5.0;
-const double k_repel = 10^-3;
+const double k_repel = 0.001;
 
 vector<Node> initializeNodes(int numNodes){
     vector<Node> nodes;
@@ -69,7 +69,7 @@ SimpleGraph adjustByAttract(SimpleGraph & graph){
     return graph;
 }
 
-void iteratePositions(SimpleGraph & graph){
+void iteratePositions(SimpleGraph & graph, double max_time){
     time_t startTime = time(NULL);
     while(difftime(time(NULL),startTime)<=max_time){
         adjustByRepel(graph);
@@ -78,29 +78,34 @@ void iteratePositions(SimpleGraph & graph){
     }
 }
 
-struct Hello{
-    int x;
-};
+string promptForFileName(){
+    cout<<"Enter name of file:";
+    string fileName;
+    getline(cin, fileName);
+    return fileName;
+}
 
-vector<Hello> changeX(vector<Hello>& hellos){
-    Hello *hello = &hellos.at(0);
-    hello->x=10;
-    cout<<"x value in method is:"<<hellos.at(0).x;
-    return hellos;
+double promptForNumSecs(){
+    double numSecs;
+    while(true){
+        cout<<"Enter number of seconds to run:";
+        string line;
+        getline(cin,line);
+        stringstream converter;
+        converter<<line;
+        if(converter>>numSecs && numSecs>0){
+            return numSecs;
+        }
+        else{
+            cout<<"Invalid input for seconds. Must be a positive number."<<endl;
+        }
+    }
+    return numSecs;
 }
 
 void runGraphViz(){
-    /*
-    Hello hello;
-    hello.x=5;
-    vector<Hello> hellos;
-    hellos.push_back(hello);
-    changeX(hellos);
-    cout<<"x value is:"<<hellos.at(0).x<<endl;
-    */
-    cout<<"Enter name of file:";
-    string fileName;
-    getline(cin,fileName);
+    string fileName = promptForFileName();
+    double numSecs = promptForNumSecs();
     ifstream input;
     input.open(fileName);
     int numNodes;
@@ -111,7 +116,7 @@ void runGraphViz(){
     SimpleGraph graph;
     graph.nodes=nodes;
     graph.edges=edges;
-    iteratePositions(graph);
+    iteratePositions(graph, numSecs);
     input.close();
 }
 
