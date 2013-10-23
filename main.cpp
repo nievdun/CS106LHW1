@@ -1,12 +1,118 @@
 #include <iostream>
+#include <fstream>
+#include <cmath>
+#include <ctime>
 #include "SimpleGraph.h"
 using namespace std;
 
+const double kPi = 3.14159265358979323;
+const double max_time = 5.0;
+const double k_repel = 10^-3;
+
+vector<Node> initializeNodes(int numNodes){
+    vector<Node> nodes;
+    for(int i=0;i<numNodes;i++){
+        Node currNode;
+        currNode.x=cos(2*kPi*i/((double)numNodes));
+        currNode.y=sin(2*kPi*i/((double)numNodes));
+        nodes.push_back(currNode);
+    }
+    return nodes;
+}
+
+vector<Edge> getEdges(ifstream & input){
+    vector<Edge> edges;
+    while(true){
+        int start;
+        int end;
+        input>>start;
+        input>>end;
+        if(input.fail())
+            break;
+        Edge currEdge;
+        currEdge.start=start;
+        currEdge.end=end;
+        edges.push_back(currEdge);
+    }
+    return edges;
+}
+
+SimpleGraph adjustByRepel(SimpleGraph & graph){
+    for(size_t i=0; i<graph.nodes.size()-1;i++){
+        Node *currNode = &(graph.nodes.at(i));
+        for(size_t j=i+1; j<graph.nodes.size();j++){
+            Node *otherNode = &(graph.nodes.at(j));
+            double f_repel = k_repel/sqrt(pow((currNode->x-otherNode->x),2)+pow((currNode->y-otherNode->y),2));
+            double theta = atan2(otherNode->y-currNode->y, otherNode->x-currNode->x);
+            currNode->x = currNode->x - f_repel*cos(theta);
+            currNode->y = currNode->y - f_repel*sin(theta);
+            otherNode->x = otherNode->x + f_repel*cos(theta);
+            otherNode->y = otherNode->y + f_repel*sin(theta);
+        }
+    }
+    return graph;
+}
+
+SimpleGraph adjustByAttract(SimpleGraph & graph){
+    for(size_t i=0; i<graph.edges.size();i++){
+        int start = graph.edges.at(i).start;
+        int end = graph.edges.at(i).end;
+        Node *startNode = &(graph.nodes.at(start));
+        Node *endNode = &(graph.nodes.at(end));
+        double f_attract = k_repel*(pow((endNode->y-startNode->y),2)+pow((endNode->x-startNode->x),2));
+        double theta = atan2(endNode->y-startNode->y, endNode->x-startNode->x);
+        startNode->x = startNode->x + f_attract*cos(theta);
+        startNode->y = startNode->y + f_attract*sin(theta);
+        endNode->x = endNode->x - f_attract*cos(theta);
+        endNode->y = endNode->y - f_attract*sin(theta);
+    }
+    return graph;
+}
+
+void iteratePositions(SimpleGraph & graph){
+    time_t startTime = time(NULL);
+    while(difftime(time(NULL),startTime)<=max_time){
+        adjustByRepel(graph);
+        adjustByAttract(graph);
+        DrawGraph(graph);
+    }
+}
+
+struct Hello{
+    int x;
+};
+
+vector<Hello> changeX(vector<Hello>& hellos){
+    Hello *hello = &hellos.at(0);
+    hello->x=10;
+    cout<<"x value in method is:"<<hellos.at(0).x;
+    return hellos;
+}
+
 void runGraphViz(){
-    cout<<"Enter a word:";
-    string word;
-    getline(cin,word);
-    cout<<word<<endl;
+    /*
+    Hello hello;
+    hello.x=5;
+    vector<Hello> hellos;
+    hellos.push_back(hello);
+    changeX(hellos);
+    cout<<"x value is:"<<hellos.at(0).x<<endl;
+    */
+    cout<<"Enter name of file:";
+    string fileName;
+    getline(cin,fileName);
+    ifstream input;
+    input.open(fileName);
+    int numNodes;
+    input>>numNodes;
+    cout<<"Number of nodes are: "<<numNodes<<endl;
+    vector<Node> nodes = initializeNodes(numNodes);
+    vector<Edge> edges = getEdges(input);
+    SimpleGraph graph;
+    graph.nodes=nodes;
+    graph.edges=edges;
+    iteratePositions(graph);
+    input.close();
 }
 
 int main() {
